@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Watch Gallery</title>
+  <meta name="description" content="Ma sélection de montres : repérées, essayées, comparées.">
+  <meta name="theme-color" content="#14171c">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo">
+      <img src="icons/icon.svg" alt="" width="36" height="36">
+      <div>
+        <h1>Watch Gallery</h1>
+        <p class="stats" id="stats"></p>
+      </div>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn primary" id="btn-add">+ Ajouter</button>
+      <button type="button" class="btn" id="btn-install">Bouton « 1 clic »</button>
+      <details class="menu">
+        <summary class="btn" aria-label="Plus d'options">⋯</summary>
+        <div class="menu-list">
+          <button type="button" id="btn-export">Exporter ma sélection</button>
+          <label>Importer une sélection<input type="file" id="import-file" accept="application/json,.json" hidden></label>
+        </div>
+      </details>
+    </div>
+  </header>
+
+  <nav class="toolbar" aria-label="Affichage">
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" data-view="gallery">Galerie</button>
+      <button type="button" role="tab" data-view="compare">Comparatif</button>
+    </div>
+    <div class="chips" id="filters"></div>
+    <div class="controls">
+      <input type="search" id="search" placeholder="Rechercher…" aria-label="Rechercher">
+      <select id="sort" aria-label="Trier">
+        <option value="recent">Ajout récent</option>
+        <option value="price-asc">Prix croissant</option>
+        <option value="price-desc">Prix décroissant</option>
+        <option value="rating">Mieux notées</option>
+        <option value="brand">Marque A → Z</option>
+      </select>
+    </div>
+  </nav>
+
+  <main id="main"></main>
+
+  <dialog id="watch-dialog" aria-labelledby="watch-dialog-title">
+    <form id="watch-form" method="dialog" novalidate>
+      <header class="dialog-head">
+        <h2 id="watch-dialog-title">Montre</h2>
+        <button type="button" class="btn ghost" data-close aria-label="Fermer">✕</button>
+      </header>
+      <p class="banner" id="added-banner" hidden>✓ Ajoutée à ta sélection. Complète ou corrige si besoin.</p>
+
+      <div class="dialog-body">
+        <div class="form-top">
+          <div class="preview" id="image-preview"></div>
+          <div class="form-main">
+            <label class="field">Marque<input name="brand" autocomplete="off" list="brand-list"></label>
+            <label class="field">Modèle<input name="model" autocomplete="off"></label>
+            <div class="row">
+              <label class="field grow">Prix<input name="price" inputmode="decimal" autocomplete="off"></label>
+              <label class="field">Devise
+                <select name="currency">
+                  <option>EUR</option><option>CHF</option><option>USD</option><option>GBP</option><option>JPY</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        </div>
+        <label class="field">Lien vers la montre<input name="url" type="url" inputmode="url" placeholder="https://…"></label>
+        <label class="field">Image (adresse)<input name="image" type="url" inputmode="url" placeholder="https://…/photo.jpg"></label>
+
+        <fieldset class="group">
+          <legend>Mon avis</legend>
+          <label class="check"><input type="checkbox" name="tried"> Je l'ai essayée</label>
+          <div class="row tried-details">
+            <label class="field">Le<input type="date" name="triedAt"></label>
+            <label class="field grow">Où<input name="triedWhere" placeholder="Boutique, salon, ami…"></label>
+          </div>
+          <div class="field">Verdict
+            <div class="segmented" id="verdict-input"></div>
+          </div>
+          <div class="field">Note
+            <div class="star-input" id="rating-input"></div>
+            <input type="hidden" name="rating">
+          </div>
+          <label class="field">Notes perso<textarea name="notes" rows="3" placeholder="Confort au poignet, lisibilité, finitions, alternatives…"></textarea></label>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend>Caractéristiques</legend>
+          <div class="spec-grid" id="spec-fields"></div>
+        </fieldset>
+      </div>
+
+      <footer class="dialog-foot">
+        <button type="button" class="btn danger" id="btn-delete">Supprimer</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn" data-close id="btn-cancel">Annuler</button>
+        <button type="submit" class="btn primary">Enregistrer</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="install-dialog" aria-labelledby="install-title">
+    <div class="dialog-head">
+      <h2 id="install-title">Ajouter une montre en 1 clic</h2>
+      <button type="button" class="btn ghost" data-close aria-label="Fermer">✕</button>
+    </div>
+    <div class="dialog-body install">
+      <p class="warn" id="install-warning" hidden>
+        Le bouton ne fonctionne que lorsque Watch Gallery est en ligne (par exemple sur GitHub Pages),
+        pas en ouvrant le fichier directement depuis l'ordinateur.
+      </p>
+      <p>
+        Le bouton est un <strong>favori</strong> spécial : quand tu es sur la page d'une montre, clique dessus et
+        elle est ajoutée à ta sélection avec sa photo, son prix et son lien.
+      </p>
+
+      <h3>Sur ordinateur</h3>
+      <ol>
+        <li>Affiche la barre de favoris (<kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>B</kbd>, ou <kbd>⌘</kbd>+<kbd>Maj</kbd>+<kbd>B</kbd> sur Mac).</li>
+        <li>Glisse ce bouton dans la barre :
+          <a class="bookmarklet" id="bookmarklet" href="#" title="Glisse-moi dans ta barre de favoris">+ Ma sélection</a>
+        </li>
+        <li>Sur la page d'une montre, clique sur « + Ma sélection ».</li>
+      </ol>
+
+      <h3>Sur iPhone / iPad (Safari)</h3>
+      <ol>
+        <li><button type="button" class="btn small" id="btn-copy-bookmarklet">Copier le code du bouton</button></li>
+        <li>Ajoute n'importe quelle page en favori (bouton Partager → Ajouter un signet), nomme-le « + Ma sélection ».</li>
+        <li>Ouvre tes signets, touche « Modifier », sélectionne ce signet et remplace son adresse par le code copié.</li>
+        <li>Sur la page d'une montre, ouvre tes signets et touche « + Ma sélection ».</li>
+      </ol>
+
+      <h3>Sur Android (Chrome)</h3>
+      <ol>
+        <li>Menu ⋮ → « Ajouter à l'écran d'accueil » pour installer Watch Gallery.</li>
+        <li>Sur la page d'une montre : Partager → <strong>Watch Gallery</strong>. Le lien est ajouté ; complète photo et prix si besoin.</li>
+        <li>Pour tout récupérer automatiquement, crée aussi le favori comme sur iPhone, puis tape « + Ma sélection » dans la barre d'adresse et choisis-le.</li>
+      </ol>
+    </div>
+  </dialog>
+
+  <datalist id="brand-list"></datalist>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/bookmarklet.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
